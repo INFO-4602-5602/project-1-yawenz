@@ -1,0 +1,478 @@
+<html>
+<head>
+<title>Project 0</title>
+<link rel="stylesheet" type="text/css" href="project1.css"></link>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<!--Put your D3 import statement between these two lines-->
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+<!--Put your D3 import statement between these two lines-->
+</head>
+
+<body>
+	<div id="partOne">
+        <h1>Part One: </h1>
+	</div>
+
+    <div id="partTwo">
+        <h1>Part Two: </h1>
+        <div id="scatterplot">
+            <p id="scatterLabel"></p>
+        </div>
+	</div>
+
+    <div id="partThree">
+        <h1>Part Three &amp; Four: </h1>
+        <div id="linegraph">
+        </div>
+	</div>
+
+    <div id="partFive">
+        <h1>Part Five: </h1>
+        <div id="scatterplotSet">
+        </div>
+	</div>
+
+    <script type="text/javascript">
+        // Put your part one code here ***********************
+        d3.csv("../zhang/data/anscombe_I.csv", checkDataset);
+        d3.csv("../zhang/data/anscombe_II.csv", checkDataset);
+        d3.csv("../zhang/data/anscombe_III.csv", checkDataset);
+        d3.csv("../zhang/data/anscombe_IV.csv", checkDataset);
+
+        // Leave this to test your data uploading. All data uploading should be above this line
+        function checkDataset(dataset) {
+            if (dataset.length == 11)
+                $("#partOne").append("<p>data loaded correctly</p>");
+            else
+                $("#partOne").append("<p>data loaded incorrectly. Try using the debugger to help you find the bug!</p>");
+        }
+
+        // Put your part two code here ***********************
+
+        // add the tooltip area to the webpage
+        var tooltip = d3.select("#scatterplot").append("p")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        // First, we will create some constants to define non-data-related parts of the visualization
+        var w = 700; // Width of our visualization
+        var h = 500; // Height of our visualization
+        var xOffset = 40; // Space for x-axis labels
+        var yOffset = 100; // Space for y-axis labels
+        var margin = 10; // Margin around visualization
+        var vals = ['x', 'y']; // List of data attributes
+        var xVal = vals[0]; // Value to plot on x-axis
+        var yVal = vals[1]; // Value to plot on y-axis
+
+        // set the dimensions and margins of the graph
+        var margin = {top: 20, right: 20, bottom: 30, left: 50};
+        var width = 500 - margin.left - margin.right;
+        var height = 300 - margin.top - margin.bottom;
+
+        // set the ranges
+        var x = d3.scaleLinear().range([0, width]);
+        var y = d3.scaleLinear().range([height, 0]);
+
+        // append the svg obgect to the body of the page
+        // appends a 'group' element to 'svg'
+        // moves the 'group' element to the top left margin
+        var svg_2 = d3.select("#scatterplot").append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate("+ margin.left + "," + margin.top +")");
+
+        // Get the data
+        d3.csv("../zhang/data/anscombe_I.csv", function(error, data){
+          if (error) throw error;
+
+          // change string to number
+          data.forEach(function(d) {
+            d[xVal] = +d[xVal];
+            d[yVal] = +d[yVal];
+            // console.log(d);
+          });
+
+          // Scale the range of the data, get min & max
+          // Mapping pixel with data
+          x.domain([d3.min(data, function(d) {return d[xVal];}) - 1, d3.max(data, function(d) {return d[xVal];}) + 1]);
+          y.domain([d3.min(data, function(d) {return d[yVal];}) - 1, d3.max(data, function(d) {return d[yVal];}) + 1]);
+
+          // Add the scatterplot points
+          svg_2.selectAll("dot")
+             .data(data)
+             .enter()
+             .append("circle")
+             .attr("r", 5)
+             .attr("cx", function(d) {return x(d[xVal]);})
+             .attr("cy", function(d) {return y(d[yVal]);})
+             .attr("class", "point")
+             .on("click", function(d) {
+              tooltip.transition()
+                   .duration(200)
+                   .style("opacity", .9);
+              tooltip.html("(" + d[xVal] + ", " + d[yVal] + ")")
+                   .style("left", (d3.event.pageX + 5) + "px")
+                   .style("top", (d3.event.pageY - 28) + "px");})
+             .on("mouseover", function(d) {
+               d3.select(this).attr("r", 8).style("fill", "yellow");
+             })
+             .on("mouseout", function(d) {
+                  tooltip.transition()
+                       .duration(500)
+                       .style("opacity", 0);
+                  d3.select(this).attr("r", 5).style("fill", "red");});
+
+          // Add the X Axis
+          svg_2.append("g")
+             .attr("transform", "translate(0," + height + ")")
+             .call(d3.axisBottom(x));
+
+          // Add the Y Axis
+          svg_2.append("g")
+             .call(d3.axisLeft(y));
+
+          // Add text labels, use label format in CSS file
+          var xLabel = svg_2.append("text")
+                          .attr("class", "label")
+                          .text(xVal)
+                          .attr("x", width - 20)
+                          .attr("y", height - 10);
+
+          var yLabel = svg_2.append("text")
+                          .attr("class", "label")
+                          .text(yVal)
+                          .attr("y", -10)
+        });
+
+        // Put your part three & four code here ***********************
+
+        var svg_3 = d3.select("#linegraph").append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate("+ margin.left + "," + margin.top +")");
+
+        // Define the line
+        var valueline = d3.line()
+            .x(function(d) { return x(d.x); })
+            .y(function(d) { return y(d.y); })
+            .curve(d3.curveLinear);
+
+        // Get the data
+        d3.csv("../zhang/data/anscombe_I.csv", function(error, data){
+          if (error) throw error;
+
+          // change string to number
+          data.forEach(function(d) {
+            d[xVal] = +d[xVal];
+            d[yVal] = +d[yVal];
+          });
+
+          // sort data
+          data.sort(function(a, b){
+            return d3.ascending(a.x, b.x);
+          });
+          console.log(data);
+
+          // Scale the range of the data, get min & max
+          // Mapping pixel with data
+          x.domain([d3.min(data, function(d) {return d[xVal];}) - 1, d3.max(data, function(d) {return d[xVal];}) + 1]);
+          y.domain([d3.min(data, function(d) {return d[yVal];}) - 1, d3.max(data, function(d) {return d[yVal];}) + 1]);
+
+          // Add the valueline path
+          svg_3.append("path")
+              .attr("d", valueline(data))
+              .attr("stroke", "blue")
+              .attr("stroke-width", 2)
+              .attr("fill", "none");
+
+          // Add the X Axis
+          svg_3.append("g")
+             .attr("transform", "translate(0," + height + ")")
+             .call(d3.axisBottom(x));
+
+          // Add the Y Axis
+          svg_3.append("g")
+             .call(d3.axisLeft(y));
+
+          // Add text labels, use label format in CSS file
+          var xLabel = svg_3.append("text")
+                          .attr("class", "label")
+                          .text(xVal)
+                          .attr("x", width - 20)
+                          .attr("y", height - 10);
+
+          var yLabel = svg_3.append("text")
+                          .attr("class", "label")
+                          .text(yVal)
+                          .attr("y", -10)
+        });
+
+        // Put your part five code here ***********************
+
+        // set the dimensions and margins of the graph
+        var sub_margin = {top: 20, right: 20, bottom: 30, left: 50};
+        var sub_width = 300 - sub_margin.left - sub_margin.right;
+        var sub_height = 150 - sub_margin.top - sub_margin.bottom;
+
+        // set the ranges
+        var sub_x = d3.scaleLinear().range([0, sub_width]);
+        var sub_y = d3.scaleLinear().range([sub_height, 0]);
+
+        // append the svg obgect to the body of the page
+        // appends a 'group' element to 'svg'
+        // moves the 'group' element to the top left margin
+        var svg_4 = d3.select("#scatterplotSet").append("svg")
+                    .attr("width", sub_width + sub_margin.left + sub_margin.right)
+                    .attr("height", sub_height + sub_margin.top + sub_margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate("+ sub_margin.left + "," + sub_margin.top +")");
+
+        // Get the data
+        d3.csv("../zhang/data/anscombe_I.csv", function(error, data){
+          if (error) throw error;
+
+          // change string to number
+          data.forEach(function(d) {
+            d[xVal] = +d[xVal];
+            d[yVal] = +d[yVal];
+            // console.log(d);
+          });
+
+          // Scale the range of the data, get min & max
+          // Mapping pixel with data
+          sub_x.domain([d3.min(data, function(d) {return d[xVal];}) - 1, d3.max(data, function(d) {return d[xVal];}) + 1]);
+          sub_y.domain([d3.min(data, function(d) {return d[yVal];}) - 1, d3.max(data, function(d) {return d[yVal];}) + 1]);
+
+          // Add the scatterplot points
+          svg_4.selectAll("dot")
+             .data(data)
+             .enter()
+             .append("circle")
+             .attr("r", 5)
+             .attr("cx", function(d) {return sub_x(d[xVal]);})
+             .attr("cy", function(d) {return sub_y(d[yVal]);})
+             .attr("class", "point")
+
+          // Add title
+          svg_4.append("text")
+              .attr("x", (sub_width / 2))
+              .attr("y", 0 - (sub_margin.top / 4))
+              .attr("text-anchor", "middle")
+              .style("font-size", "14px")
+              .text("Anscombe I");
+
+          // Add the X Axis
+          svg_4.append("g")
+             .attr("transform", "translate(0," + sub_height + ")")
+             .call(d3.axisBottom(sub_x));
+
+          // Add the Y Axis
+          svg_4.append("g")
+             .call(d3.axisLeft(sub_y));
+
+          // Add text labels, use label format in CSS file
+          var xLabel = svg_4.append("text")
+                          .attr("class", "label")
+                          .text(xVal)
+                          .attr("x", sub_width - 20)
+                          .attr("y", sub_height - 10);
+
+          var yLabel = svg_4.append("text")
+                          .attr("class", "label")
+                          .text(yVal)
+                          .attr("y", -10)
+        });
+
+        var svg_5 = d3.select("#scatterplotSet").append("svg")
+                    .attr("width", sub_width + sub_margin.left + sub_margin.right)
+                    .attr("height", sub_height + sub_margin.top + sub_margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate("+ sub_margin.left + "," + sub_margin.top +")");
+
+        // Get the data
+        d3.csv("../zhang/data/anscombe_II.csv", function(error, data){
+          if (error) throw error;
+
+          // change string to number
+          data.forEach(function(d) {
+            d[xVal] = +d[xVal];
+            d[yVal] = +d[yVal];
+            // console.log(d);
+          });
+
+          // Scale the range of the data, get min & max
+          // Mapping pixel with data
+          sub_x.domain([d3.min(data, function(d) {return d[xVal];}) - 1, d3.max(data, function(d) {return d[xVal];}) + 1]);
+          sub_y.domain([d3.min(data, function(d) {return d[yVal];}) - 1, d3.max(data, function(d) {return d[yVal];}) + 1]);
+
+          // Add the scatterplot points
+          svg_5.selectAll("dot")
+             .data(data)
+             .enter()
+             .append("circle")
+             .attr("r", 5)
+             .attr("cx", function(d) {return sub_x(d[xVal]);})
+             .attr("cy", function(d) {return sub_y(d[yVal]);})
+             .attr("class", "point");
+
+         // Add title
+         svg_5.append("text")
+             .attr("x", (sub_width / 2))
+             .attr("y", 0 - (sub_margin.top / 4))
+             .attr("text-anchor", "middle")
+             .style("font-size", "14px")
+             .text("Anscombe II");
+
+          // Add the X Axis
+          svg_5.append("g")
+             .attr("transform", "translate(0," + sub_height + ")")
+             .call(d3.axisBottom(sub_x));
+
+          // Add the Y Axis
+          svg_5.append("g")
+             .call(d3.axisLeft(sub_y));
+
+          // Add text labels, use label format in CSS file
+          var xLabel = svg_5.append("text")
+                          .attr("class", "label")
+                          .text(xVal)
+                          .attr("x", sub_width - 20)
+                          .attr("y", sub_height - 10);
+
+          var yLabel = svg_5.append("text")
+                          .attr("class", "label")
+                          .text(yVal)
+                          .attr("y", -10)
+        });
+
+        var svg_6 = d3.select("#scatterplotSet").append("svg")
+                    .attr("width", sub_width + sub_margin.left + sub_margin.right)
+                    .attr("height", sub_height + sub_margin.top + sub_margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate("+ sub_margin.left + "," + sub_margin.top +")");
+
+        // Get the data
+        d3.csv("../zhang/data/anscombe_III.csv", function(error, data){
+          if (error) throw error;
+
+          // change string to number
+          data.forEach(function(d) {
+            d[xVal] = +d[xVal];
+            d[yVal] = +d[yVal];
+            // console.log(d);
+          });
+
+          // Scale the range of the data, get min & max
+          // Mapping pixel with data
+          sub_x.domain([d3.min(data, function(d) {return d[xVal];}) - 1, d3.max(data, function(d) {return d[xVal];}) + 1]);
+          sub_y.domain([d3.min(data, function(d) {return d[yVal];}) - 1, d3.max(data, function(d) {return d[yVal];}) + 1]);
+
+          // Add the scatterplot points
+          svg_6.selectAll("dot")
+             .data(data)
+             .enter()
+             .append("circle")
+             .attr("r", 5)
+             .attr("cx", function(d) {return sub_x(d[xVal]);})
+             .attr("cy", function(d) {return sub_y(d[yVal]);})
+             .attr("class", "point");
+
+         // Add title
+         svg_6.append("text")
+             .attr("x", (sub_width / 2))
+             .attr("y", 0 - (sub_margin.top / 4))
+             .attr("text-anchor", "middle")
+             .style("font-size", "14px")
+             .text("Anscombe III");
+
+          // Add the X Axis
+          svg_6.append("g")
+             .attr("transform", "translate(0," + sub_height + ")")
+             .call(d3.axisBottom(sub_x));
+
+          // Add the Y Axis
+          svg_6.append("g")
+             .call(d3.axisLeft(sub_y));
+
+          // Add text labels, use label format in CSS file
+          var xLabel = svg_6.append("text")
+                          .attr("class", "label")
+                          .text(xVal)
+                          .attr("x", sub_width - 20)
+                          .attr("y", sub_height - 10);
+
+          var yLabel = svg_6.append("text")
+                          .attr("class", "label")
+                          .text(yVal)
+                          .attr("y", -10)
+        });
+
+        var svg_7 = d3.select("#scatterplotSet").append("svg")
+                    .attr("width", sub_width + sub_margin.left + sub_margin.right)
+                    .attr("height", sub_height + sub_margin.top + sub_margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate("+ sub_margin.left + "," + sub_margin.top +")");
+
+        // Get the data
+        d3.csv("../zhang/data/anscombe_IV.csv", function(error, data){
+          if (error) throw error;
+
+          // change string to number
+          data.forEach(function(d) {
+            d[xVal] = +d[xVal];
+            d[yVal] = +d[yVal];
+            // console.log(d);
+          });
+
+          // Scale the range of the data, get min & max
+          // Mapping pixel with data
+          sub_x.domain([d3.min(data, function(d) {return d[xVal];}) - 1, d3.max(data, function(d) {return d[xVal];}) + 1]);
+          sub_y.domain([d3.min(data, function(d) {return d[yVal];}) - 1, d3.max(data, function(d) {return d[yVal];}) + 1]);
+
+          // Add the scatterplot points
+          svg_7.selectAll("dot")
+             .data(data)
+             .enter()
+             .append("circle")
+             .attr("r", 5)
+             .attr("cx", function(d) {return sub_x(d[xVal]);})
+             .attr("cy", function(d) {return sub_y(d[yVal]);})
+             .attr("class", "point");
+
+         // Add title
+         svg_7.append("text")
+             .attr("x", (sub_width / 2))
+             .attr("y", 0 - (sub_margin.top / 4))
+             .attr("text-anchor", "middle")
+             .style("font-size", "14px")
+             .text("Anscombe IV");
+
+          // Add the X Axis
+          svg_7.append("g")
+             .attr("transform", "translate(0," + sub_height + ")")
+             .call(d3.axisBottom(sub_x));
+
+          // Add the Y Axis
+          svg_7.append("g")
+             .call(d3.axisLeft(sub_y));
+
+          // Add text labels, use label format in CSS file
+          var xLabel = svg_7.append("text")
+                          .attr("class", "label")
+                          .text(xVal)
+                          .attr("x", sub_width - 20)
+                          .attr("y", sub_height - 10);
+
+          var yLabel = svg_7.append("text")
+                          .attr("class", "label")
+                          .text(yVal)
+                          .attr("y", -10)
+        });
+
+    </script>
+</body>
+
+
+</html>
