@@ -14,14 +14,14 @@
 	</div>
 
     <div id="partTwo">
-        <h1>Part Two: </h1>
+        <h1>Part Two &amp; Four: </h1>
         <div id="scatterplot">
             <p id="scatterLabel"></p>
         </div>
 	</div>
 
     <div id="partThree">
-        <h1>Part Three &amp; Four: </h1>
+        <h1>Part Three: </h1>
         <div id="linegraph">
         </div>
 	</div>
@@ -90,7 +90,6 @@
           data.forEach(function(d) {
             d[xVal] = +d[xVal];
             d[yVal] = +d[yVal];
-            // console.log(d);
           });
 
           // Scale the range of the data, get min & max
@@ -109,17 +108,17 @@
              .attr("class", "point")
              .on("click", function(d) {
               tooltip.transition()
-                   .duration(200)
+                   .duration(100)
                    .style("opacity", .9);
               tooltip.html("(" + d[xVal] + ", " + d[yVal] + ")")
-                   .style("left", (d3.event.pageX + 5) + "px")
-                   .style("top", (d3.event.pageY - 28) + "px");})
+                   .style("left", (d3.event.pageX + 7) + "px")
+                   .style("top", (d3.event.pageY - 22) + "px");})
              .on("mouseover", function(d) {
                d3.select(this).attr("r", 8).style("fill", "yellow");
              })
              .on("mouseout", function(d) {
                   tooltip.transition()
-                       .duration(500)
+                       .duration(400)
                        .style("opacity", 0);
                   d3.select(this).attr("r", 5).style("fill", "red");});
 
