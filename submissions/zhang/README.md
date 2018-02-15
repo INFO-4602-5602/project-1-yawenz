@@ -5,6 +5,8 @@
 
 <b>Tasks finished</b>: Part one, two, three, four and five (Note that part two and four are merged together)
 
+<b>Resources I used</b>: 
+
 <b>Bells finished</b>:
 
-<b>Whistles finished</b>: 
+<b>Whistles finished</b>:
