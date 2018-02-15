@@ -32,6 +32,13 @@
         </div>
 	</div>
 
+    <div id="Tooltips">
+        <h1>Bell Tooltips: </h1>
+        <div id="scatterplot2">
+          <p id="scatterLabel2"></p>
+        </div>
+  </div>
+
     <script type="text/javascript">
         // Put your part one code here ***********************
         d3.csv("../zhang/data/anscombe_I.csv", checkDataset);
@@ -60,9 +67,10 @@
         var xOffset = 40; // Space for x-axis labels
         var yOffset = 100; // Space for y-axis labels
         var margin = 10; // Margin around visualization
-        var vals = ['x', 'y']; // List of data attributes
+        var vals = ['x', 'y', 'z']; // List of data attributes
         var xVal = vals[0]; // Value to plot on x-axis
         var yVal = vals[1]; // Value to plot on y-axis
+        var zVal = vals[2];
 
         // set the dimensions and margins of the graph
         var margin = {top: 20, right: 20, bottom: 30, left: 50};
@@ -228,6 +236,11 @@
                     .append("g")
                     .attr("transform", "translate("+ sub_margin.left + "," + sub_margin.top +")");
 
+        var fitline = d3.line()
+            .x(function(d) {return sub_x(d.x);})
+            .y(function(d) {return sub_y(d.z);})
+            .curve(d3.curveLinear);
+
         // Get the data
         d3.csv("../zhang/data/anscombe_I.csv", function(error, data){
           if (error) throw error;
@@ -238,6 +251,53 @@
             d[yVal] = +d[yVal];
             // console.log(d);
           });
+
+          // sort data
+          data.sort(function(a, b){
+            return d3.ascending(a.x, b.x);
+          });
+
+          var n = data.length;
+          var x_mean = 0;
+          var y_mean = 0;
+          var term1 = 0;
+          var term2 = 0;
+
+          data.forEach(function(d) {
+            x_mean += d[xVal];
+            y_mean += d[yVal];
+          });
+
+          // Calculate the mean x and y
+          x_mean /= n;
+          y_mean /= n;
+
+          // Calculate coefficients
+          var xr = 0;
+          var yr = 0;
+          data.forEach(function(d) {
+            xr = d[xVal] - x_mean;
+            yr = d[yVal] - y_mean;
+            term1 += xr * yr;
+            term2 += xr * xr;
+          });
+
+          var b1 = term1 / term2;
+          var b0 = y_mean - (b1 * x_mean);
+
+          // Perform regression
+          var yhat = [];
+          // Fit line using coeffs
+          data.forEach(function(d) {
+            yhat.push(b0 + (d[xVal] * b1));
+          });
+
+          var i = 0;
+
+          data.forEach(function(d) {
+            d[zVal] = yhat[i];
+            i += 1;
+          })
 
           // Scale the range of the data, get min & max
           // Mapping pixel with data
@@ -252,7 +312,14 @@
              .attr("r", 5)
              .attr("cx", function(d) {return sub_x(d[xVal]);})
              .attr("cy", function(d) {return sub_y(d[yVal]);})
-             .attr("class", "point")
+             .attr("class", "point");
+
+         // Add fit lines
+         svg_4.append("path")
+              .attr("d", fitline(data))
+              .attr("stroke", "blue")
+              .attr("stroke-width", 2)
+              .attr("fill", "none");
 
           // Add title
           svg_4.append("text")
@@ -301,6 +368,53 @@
             // console.log(d);
           });
 
+          // sort data
+          data.sort(function(a, b){
+            return d3.ascending(a.x, b.x);
+          });
+
+          var n = data.length;
+          var x_mean = 0;
+          var y_mean = 0;
+          var term1 = 0;
+          var term2 = 0;
+
+          data.forEach(function(d) {
+            x_mean += d[xVal];
+            y_mean += d[yVal];
+          });
+
+          // Calculate the mean x and y
+          x_mean /= n;
+          y_mean /= n;
+
+          // Calculate coefficients
+          var xr = 0;
+          var yr = 0;
+          data.forEach(function(d) {
+            xr = d[xVal] - x_mean;
+            yr = d[yVal] - y_mean;
+            term1 += xr * yr;
+            term2 += xr * xr;
+          });
+
+          var b1 = term1 / term2;
+          var b0 = y_mean - (b1 * x_mean);
+
+          // Perform regression
+          var yhat = [];
+          // Fit line using coeffs
+          data.forEach(function(d) {
+            yhat.push(b0 + (d[xVal] * b1));
+          });
+
+          var i = 0;
+
+          data.forEach(function(d) {
+            d[zVal] = yhat[i];
+            i += 1;
+          })
+
           // Scale the range of the data, get min & max
           // Mapping pixel with data
           sub_x.domain([d3.min(data, function(d) {return d[xVal];}) - 1, d3.max(data, function(d) {return d[xVal];}) + 1]);
@@ -316,13 +430,20 @@
              .attr("cy", function(d) {return sub_y(d[yVal]);})
              .attr("class", "point");
 
-         // Add title
-         svg_5.append("text")
-             .attr("x", (sub_width / 2))
-             .attr("y", 0 - (sub_margin.top / 4))
-             .attr("text-anchor", "middle")
-             .style("font-size", "14px")
-             .text("Anscombe II");
+         // Add fit lines
+         svg_5.append("path")
+              .attr("d", fitline(data))
+              .attr("stroke", "blue")
+              .attr("stroke-width", 2)
+              .attr("fill", "none");
+
+          // Add title
+          svg_5.append("text")
+              .attr("x", (sub_width / 2))
+              .attr("y", 0 - (sub_margin.top / 4))
+              .attr("text-anchor", "middle")
+              .style("font-size", "14px")
+              .text("Anscombe I");
 
           // Add the X Axis
           svg_5.append("g")
@@ -363,6 +484,53 @@
             // console.log(d);
           });
 
+          // sort data
+          data.sort(function(a, b){
+            return d3.ascending(a.x, b.x);
+          });
+
+          var n = data.length;
+          var x_mean = 0;
+          var y_mean = 0;
+          var term1 = 0;
+          var term2 = 0;
+
+          data.forEach(function(d) {
+            x_mean += d[xVal];
+            y_mean += d[yVal];
+          });
+
+          // Calculate the mean x and y
+          x_mean /= n;
+          y_mean /= n;
+
+          // Calculate coefficients
+          var xr = 0;
+          var yr = 0;
+          data.forEach(function(d) {
+            xr = d[xVal] - x_mean;
+            yr = d[yVal] - y_mean;
+            term1 += xr * yr;
+            term2 += xr * xr;
+          });
+
+          var b1 = term1 / term2;
+          var b0 = y_mean - (b1 * x_mean);
+
+          // Perform regression
+          var yhat = [];
+          // Fit line using coeffs
+          data.forEach(function(d) {
+            yhat.push(b0 + (d[xVal] * b1));
+          });
+
+          var i = 0;
+
+          data.forEach(function(d) {
+            d[zVal] = yhat[i];
+            i += 1;
+          })
+
           // Scale the range of the data, get min & max
           // Mapping pixel with data
           sub_x.domain([d3.min(data, function(d) {return d[xVal];}) - 1, d3.max(data, function(d) {return d[xVal];}) + 1]);
@@ -378,13 +546,20 @@
              .attr("cy", function(d) {return sub_y(d[yVal]);})
              .attr("class", "point");
 
-         // Add title
-         svg_6.append("text")
-             .attr("x", (sub_width / 2))
-             .attr("y", 0 - (sub_margin.top / 4))
-             .attr("text-anchor", "middle")
-             .style("font-size", "14px")
-             .text("Anscombe III");
+         // Add fit lines
+         svg_6.append("path")
+              .attr("d", fitline(data))
+              .attr("stroke", "blue")
+              .attr("stroke-width", 2)
+              .attr("fill", "none");
+
+          // Add title
+          svg_6.append("text")
+              .attr("x", (sub_width / 2))
+              .attr("y", 0 - (sub_margin.top / 4))
+              .attr("text-anchor", "middle")
+              .style("font-size", "14px")
+              .text("Anscombe I");
 
           // Add the X Axis
           svg_6.append("g")
@@ -425,6 +600,53 @@
             // console.log(d);
           });
 
+          // sort data
+          data.sort(function(a, b){
+            return d3.ascending(a.x, b.x);
+          });
+
+          var n = data.length;
+          var x_mean = 0;
+          var y_mean = 0;
+          var term1 = 0;
+          var term2 = 0;
+
+          data.forEach(function(d) {
+            x_mean += d[xVal];
+            y_mean += d[yVal];
+          });
+
+          // Calculate the mean x and y
+          x_mean /= n;
+          y_mean /= n;
+
+          // Calculate coefficients
+          var xr = 0;
+          var yr = 0;
+          data.forEach(function(d) {
+            xr = d[xVal] - x_mean;
+            yr = d[yVal] - y_mean;
+            term1 += xr * yr;
+            term2 += xr * xr;
+          });
+
+          var b1 = term1 / term2;
+          var b0 = y_mean - (b1 * x_mean);
+
+          // Perform regression
+          var yhat = [];
+          // Fit line using coeffs
+          data.forEach(function(d) {
+            yhat.push(b0 + (d[xVal] * b1));
+          });
+
+          var i = 0;
+
+          data.forEach(function(d) {
+            d[zVal] = yhat[i];
+            i += 1;
+          })
+
           // Scale the range of the data, get min & max
           // Mapping pixel with data
           sub_x.domain([d3.min(data, function(d) {return d[xVal];}) - 1, d3.max(data, function(d) {return d[xVal];}) + 1]);
@@ -440,13 +662,20 @@
              .attr("cy", function(d) {return sub_y(d[yVal]);})
              .attr("class", "point");
 
-         // Add title
-         svg_7.append("text")
-             .attr("x", (sub_width / 2))
-             .attr("y", 0 - (sub_margin.top / 4))
-             .attr("text-anchor", "middle")
-             .style("font-size", "14px")
-             .text("Anscombe IV");
+         // Add fit lines
+         svg_7.append("path")
+              .attr("d", fitline(data))
+              .attr("stroke", "blue")
+              .attr("stroke-width", 2)
+              .attr("fill", "none");
+
+          // Add title
+          svg_7.append("text")
+              .attr("x", (sub_width / 2))
+              .attr("y", 0 - (sub_margin.top / 4))
+              .attr("text-anchor", "middle")
+              .style("font-size", "14px")
+              .text("Anscombe I");
 
           // Add the X Axis
           svg_7.append("g")
@@ -465,6 +694,72 @@
                           .attr("y", sub_height - 10);
 
           var yLabel = svg_7.append("text")
+                          .attr("class", "label")
+                          .text(yVal)
+                          .attr("y", -10)
+        });
+
+        // Bell: Tooptips
+        var svg_8 = d3.select("#scatterplot2").append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate("+ margin.left + "," + margin.top +")");
+
+        // Get the data
+        d3.csv("../zhang/data/anscombe_I.csv", function(error, data){
+          if (error) throw error;
+
+          // change string to number
+          data.forEach(function(d) {
+            d[xVal] = +d[xVal];
+            d[yVal] = +d[yVal];
+          });
+
+          // Scale the range of the data, get min & max
+          // Mapping pixel with data
+          x.domain([d3.min(data, function(d) {return d[xVal];}) - 1, d3.max(data, function(d) {return d[xVal];}) + 1]);
+          y.domain([d3.min(data, function(d) {return d[yVal];}) - 1, d3.max(data, function(d) {return d[yVal];}) + 1]);
+
+          // Add the scatterplot points
+          svg_8.selectAll("dot")
+             .data(data)
+             .enter()
+             .append("circle")
+             .attr("r", 5)
+             .attr("cx", function(d) {return x(d[xVal]);})
+             .attr("cy", function(d) {return y(d[yVal]);})
+             .attr("class", "point")
+             .on("mouseover", function(d) {
+              tooltip.transition()
+                   .duration(100)
+                   .style("opacity", .9);
+              tooltip.html("(" + d[xVal] + ", " + d[yVal] + ")")
+                   .style("left", (d3.event.pageX + 7) + "px")
+                   .style("top", (d3.event.pageY - 22) + "px");})
+             .on("mouseout", function(d) {
+                  tooltip.transition()
+                       .duration(100)
+                       .style("opacity", 0);
+                  d3.select(this).attr("r", 5).style("fill", "red");});
+
+          // Add the X Axis
+          svg_8.append("g")
+             .attr("transform", "translate(0," + height + ")")
+             .call(d3.axisBottom(x));
+
+          // Add the Y Axis
+          svg_8.append("g")
+             .call(d3.axisLeft(y));
+
+          // Add text labels, use label format in CSS file
+          var xLabel = svg_8.append("text")
+                          .attr("class", "label")
+                          .text(xVal)
+                          .attr("x", width - 20)
+                          .attr("y", height - 10);
+
+          var yLabel = svg_8.append("text")
                           .attr("class", "label")
                           .text(yVal)
                           .attr("y", -10)
